@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>병원까지 얼마나 걸릴까? | 경기남부 진료 접근성</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  {% if kakao_js_key %}
+  <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ kakao_js_key|urlencode }}&autoload=false"></script>
+  {% endif %}
+  <script defer src="{{ url_for('static', filename='app.js') }}"></script>
+</head>
+<body>
+  <div class="app-shell" data-limit="{{ limit_minutes }}">
+    <header class="header">
+      <div class="brand">
+        <div class="brand-icon">✚</div>
+        <div><strong>메디루트</strong><span>경기남부 대학병원 접근성</span></div>
+      </div>
+      <div class="header-label">산업공학종합설계 · 프로토타입</div>
+    </header>
+
+    <div class="layout">
+      <aside class="sidebar">
+        <section class="intro">
+          <div class="eyebrow">진료 접근성 분석</div>
+          <h1>나에게 가까운<br />대학병원은?</h1>
+          <p>출발지와 교통수단을 선택하면 5개 대학병원의 예상 이동시간과 접근성 점수를 비교합니다.</p>
+        </section>
+
+        <section class="section">
+          <div class="section-heading"><span class="number">01</span><h2>출발지 설정</h2></div>
+          <button id="locateBtn" class="gps-button" type="button"><span>◎</span> 내 현재 위치 사용</button>
+          <div class="or">또는 장소 검색</div>
+          <form id="searchForm" class="search-form">
+            <input id="searchInput" type="text" maxlength="80" placeholder="예: 수원역, 광교중앙역" autocomplete="off" />
+            <button type="submit" aria-label="장소 검색">검색</button>
+          </form>
+          <div id="searchResults" class="search-results" hidden></div>
+          <div class="location-hint">지도를 클릭해서 출발지를 직접 지정할 수도 있어요.</div>
+          <div class="origin-box"><span>출발지</span><strong id="originLabel">아직 선택되지 않았어요</strong></div>
+        </section>
+
+        <section class="section">
+          <div class="section-heading"><span class="number">02</span><h2>이동수단 선택</h2></div>
+          <div class="mode-grid" role="radiogroup" aria-label="이동수단">
+            <button class="mode active" type="button" data-mode="car" aria-pressed="true"><span>🚗</span>자동차</button>
+            <button class="mode" type="button" data-mode="transit" aria-pressed="false"><span>🚌</span>대중교통</button>
+            <button class="mode" type="button" data-mode="walk" aria-pressed="false"><span>🚶</span>도보</button>
+            <button class="mode" type="button" data-mode="bike" aria-pressed="false"><span>🚲</span>자전거</button>
+          </div>
+        </section>
+
+        <button type="button" id="compareBtn" class="compare-button" disabled>5개 병원 접근성 비교 <span>→</span></button>
+        <p class="privacy-note">현재 위치는 이번 조회에만 사용하며 별도로 저장하지 않습니다.</p>
+        <div class="status" id="status" role="status" aria-live="polite">출발지를 설정해 주세요.</div>
+      </aside>
+
+      <main class="main">
+        <div class="map-card">
+          <div class="map-toolbar"><span class="map-title">병원 위치 및 이동 경로</span><span class="map-subtitle" id="mapSubtitle">경기 남부 5개 대학병원</span></div>
+          <div id="map"></div>
+          <div id="mapPlaceholder" class="map-placeholder" hidden>카카오 지도 초기화 중입니다.</div>
+          <div class="map-footnote">지도 데이터 및 경로: Kakao Maps / Kakao Mobility</div>
+        </div>
+
+        <div class="results-head">
+          <div><div class="eyebrow">접근성 비교</div><h2>병원별 분석 결과</h2></div>
+          <span class="standard">기준시간 {{ limit_minutes|int }}분 · 100점 만점</span>
+        </div>
+        <div id="results" class="result-list">
+          <div class="empty-state"><div>🏥</div><strong>비교 결과가 여기에 표시됩니다</strong><p>출발지와 교통수단을 선택한 후 비교 버튼을 눌러주세요.</p></div>
+        </div>
+        <p class="disclaimer">안내: 점수는 이동 소요시간만을 반영한 연구용 지표입니다. 실제 병원의 진료 수준, 예약 가능 여부 또는 의료진 적합성을 평가하지 않습니다. 예상 이동시간은 실제 교통상황·운행시각과 다를 수 있습니다.</p>
+      </main>
+    </div>
+  </div>
+</body>
+</html>
