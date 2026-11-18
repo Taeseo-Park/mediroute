@@ -18,7 +18,7 @@ app = Flask(__name__)
 
 KAKAO_JS_KEY = os.getenv("KAKAO_JAVASCRIPT_KEY", "").strip()
 KAKAO_REST_KEY = os.getenv("KAKAO_REST_API_KEY", "").strip()
-LIMIT_MINUTES = float(os.getenv("ACCESSIBILITY_LIMIT_MINUTES", "120"))
+LIMIT_MINUTES = float(os.getenv("ACCESSIBILITY_LIMIT_MINUTES", "180"))
 if LIMIT_MINUTES <= 0:
     raise ValueError("ACCESSIBILITY_LIMIT_MINUTES는 0보다 커야 합니다.")
 
