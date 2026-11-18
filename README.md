@@ -36,7 +36,7 @@ Python 3.10 이상과 VS Code가 설치되어 있어야 합니다.
 폴더를 VS Code로 열고, 상단 [터미널] → [새 터미널]을 눌러 다음 명령어를 순서대로 입력합니다.
 
 ```powershell
-py -m venv .venv
+python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 Copy-Item .env.example .env
