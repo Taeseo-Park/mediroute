@@ -147,8 +147,20 @@ def parse_route(data: dict[str, Any], mode: str) -> dict[str, Any]:
         path = points[:5000]
         url = None  # 자동차는 주소 기반 Kakao Maps 링크를 프런트에서 구성
     elif mode == "transit":
-        if data.get("status") != "OK":
-            raise RuntimeError(f"대중교통 경로 조회 결과: {data.get('status', '알 수 없음')}")
+        status = data.get("status")
+
+        if status == "NO_RESULTS":
+            raise RuntimeError(
+                "현재 출발지에서 해당 병원까지 "
+                "대중교통 경로가 검색되지 않습니다. "
+                "가까운 거리라면 도보 경로를 확인하거나 "
+                "출발지를 변경해 주세요."
+            )
+
+        if status != "OK":
+            raise RuntimeError(
+                f"대중교통 경로 조회 실패: {status}"
+            )
         routes = data.get("routes") or []
         if not routes:
             raise RuntimeError("대중교통 경로가 없습니다.")
