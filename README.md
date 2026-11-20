@@ -1,161 +1,109 @@
-# mediroute
-Southern_Gyeonggi_Hospital_Access
+# 메디루트 | 3단계 진료 교수 추천 · 병원 길찾기
 
-# 메디루트 — 경기 남부 대학병원 접근성 비교 (Kakao Maps API 연동)
+경기 남부 5개 대학병원 대상 산업공학종합설계 **시연용 프로토타입**입니다.
 
-경기 남부 5개 대학병원에 대해 현재 위치 또는 검색한 출발지에서 **자동차/대중교통/도보/자전거** 이동 소요시간을 조회하고, 접근성 점수를 산출하는 산업공학종합설계 프로젝트용 웹앱 프로토타입입니다.
+## 변경된 사용자 흐름
 
-- 대상 병원: 아주대학교병원, 가톨릭대학교 성빈센트병원, 용인세브란스병원, 분당서울대학교병원, 분당차병원
-- 출발지: 브라우저 GPS, Kakao 장소 검색 또는 지도 클릭
-- 결과: 실제 API가 반환한 예상 이동시간(분), 거리(km), 0~100점 점수 및 5개 병원 순위
-- 지도에서 병원·선택 경로 확인, 카카오맵 길찾기 페이지 연결
-- 경로 미조회 시 **점수를 0으로 넣지 않고 '조회 불가'** 표시
+1. **진료 분야 선택**: 진료과 → 부위/분야 → 세부 증상 선택.
+2. **추천 교수 결과**: 진료 전문성(0.8×진료적합성 + 0.2×경력점수) 높은 순으로 가상 교수 카드 표시. 각 카드에 **길찾기** 버튼. 위치 권한을 허용한 경우 출발지와 병원 대표점의 **직선거리** 표시.
+3. **병원 길찾기**: 카드의 교수 소속 병원으로 목적지 고정. 내 현재 위치·장소 검색·지도 클릭으로 출발지 선택 → 자동차/대중교통/도보/자전거 선택 → API 경로 소요시간·이동거리 및 접근성 점수 조회. 별도의 카카오맵으로 열기도 가능.
 
-> **중요:** 카카오 API 키가 필요합니다. 이 예제는 작성 시점의 공개 공식 API 문서에 맞춘 코드이며 실제 카카오 서버의 응답을 키로 검증한 상태는 아닙니다. 프로덕션 서비스로 바로 사용하지 마세요.
+현재 **예약하기 버튼을 구현하지 않았습니다.** 교수/진료적합성/경력 데이터는 `data/mock_professors.json`의 가상 테스트 값입니다. 실제 임상 적합성을 주장하지 않습니다.
 
-## 1. 카카오 앱 생성 및 키 발급
+## VS Code 기존 `mediroute-clean` 프로젝트에 업데이트
 
-1. https://developers.kakao.com 에 카카오 계정으로 로그인합니다.
-2. [앱] → [앱 생성]에서 앱을 등록합니다.
-3. 생성한 앱에서 [카카오맵] → [사용 설정] → [상태 ON]을 선택합니다.
-4. [앱] → [플랫폼 키] 메뉴에서 **JavaScript 키**와 **REST API 키**를 확인합니다.
-5. JavaScript 키의 **JavaScript SDK 도메인**에 `http://localhost:5000`을 등록합니다. 필요하면 `http://127.0.0.1:5000`도 별도로 등록합니다.
-6. 무료 쿼터 적용 여부를 확인합니다. 2026-07-21 이후 개발자 계정 기준 **첫 번째**로 카카오맵 API를 활성화한 앱에만 무료 쿼터가 제공되며, 이후 앱/초과 사용은 비즈월렛 및 유료 API 설정이 필요할 수 있습니다.
-7. 앱의 REST API 키 설정 및 요청 허용 IP 등의 제한 설정을 확인합니다. REST 키는 타인에게 공개하거나 웹 코드에 직접 넣으면 안 됩니다.
+**업데이트 전 기존 폴더를 백업하세요.** 다운로드한 `mediroute-three-step-update.zip` 압축을 해제한 뒤, 압축 속 파일/폴더를 아래 폴더에 합쳐 복사합니다.
 
-공식 문서:
-- 지도 Web SDK: https://apis.map.kakao.com/web/guide/
-- Kakao Maps REST API: https://developers.kakao.com/docs/ko/kakaomap/rest-api
-- Kakao Mobility 자동차 길찾기: https://developers.kakaomobility.com/guide/navi-api/directions
-- 2026년 카카오맵 활성화 변경: https://devtalk.kakao.com/t/api-notice-on-new-kakao-map-api-features-and-free-quota-policy/150222
-
-## 2. 실행 환경 설치 (Windows PowerShell 기준)
-
-Python 3.10 이상과 VS Code가 설치되어 있어야 합니다.
-
-폴더를 VS Code로 열고, 상단 [터미널] → [새 터미널]을 눌러 다음 명령어를 순서대로 입력합니다.
-
-```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-Copy-Item .env.example .env
+```text
+C:\Users\subak\mediroute-clean\
+├── .env                  ← 유지 (덮어쓰거나 GitHub에 업로드 금지)
+├── .venv/                ← 유지
+├── .git/                 ← 유지
+├── .gitignore
+├── app.py                ← 업데이트
+├── recommendations.py   ← 기존 DB 연동 지점 유지
+├── specialties.py       ← 새 파일
+├── data/
+│   └── mock_professors.json
+├── templates/
+│   └── index.html       ← 업데이트
+├── static/
+│   ├── app.js           ← 업데이트
+│   └── style.css        ← 업데이트
+├── tests/
+│   └── test_app.py
+└── requirements.txt
 ```
 
-PowerShell에서 실행 정책 오류가 날 경우 가상환경을 활성화하지 않고도 다음과 같이 실행할 수 있습니다.
+`.env`, `.venv/`, `.git/`는 **복사/덮어쓰기/삭제하지 않습니다.** 업데이트 압축에는 이 3개가 포함되지 않습니다.
+
+### 1. 로컬 실행
+
+PowerShell에서 `mediroute-clean` 폴더를 열고:
 
 ```powershell
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
-Copy-Item .env.example .env
+.\.venv\Scripts\python.exe -m unittest discover -s tests -v
 .\.venv\Scripts\python.exe app.py
 ```
 
-macOS/Linux에서 가상환경 실행:
+브라우저: <http://localhost:5000>
 
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env
-```
+`requirements.txt`가 이미 설치되어 있다면 첫 명령어는 생략 가능합니다. PowerShell 활성화 스크립트를 실행할 필요 없이 `.venv`의 Python을 직접 사용합니다.
 
-## 3. API 키 등록
+### 2. 카카오 키 설정
 
-만든 `.env`를 VS Code에서 연 후 다음 2개 값을 실제 카카오 개발자 키로 바꿉니다.
+로컬 `.env` (기존 값을 유지하거나 유효한 키로 설정):
 
 ```env
-KAKAO_JAVASCRIPT_KEY=실제_JavaScript_키
-KAKAO_REST_API_KEY=실제_REST_API_키
-ACCESSIBILITY_LIMIT_MINUTES=120
+KAKAO_JAVASCRIPT_KEY=발급받은_JavaScript_키
+KAKAO_REST_API_KEY=발급받은_REST_API_키
+ACCESSIBILITY_LIMIT_MINUTES=180
 ```
 
-**주의:** `.env` 파일을 깃허브에 올리거나 메신저로 공유하지 마세요. `.env.example`만 공유하세요. JS 키는 지도 SDK 로딩 용도로 브라우저에 보이는 것이 정상이며, 반드시 도메인을 제한해야 합니다.
+서버의 REST 키는 HTML/JavaScript에 노출하지 않습니다. 카카오 개발자센터의 JavaScript SDK 허용 도메인에 로컬 URL과 Render URL이 모두 등록되어야 지도 표시가 됩니다. 키 없이도 진료 분야 선택 및 가상 교수 목록은 확인할 수 있지만 장소 검색/실제 경로·지도는 제한됩니다.
 
-## 4. 실행
+### 3. 실제 화면 확인 순서
 
-```powershell
-python app.py
+1. 진료과 `정형외과` → 부위 `무릎` → 세부 항목을 하나 선택 → `추천 교수 보기`.
+2. `가상 교수 A`의 `길찾기` → **아주대학교병원**이 도착지로 고정되는지 확인.
+3. `내 현재 위치 사용` 또는 `수원역` 장소 검색 → 자동차/대중교통/도보/자전거 선택 → `경로·이동시간 확인`.
+4. 경로 결과의 예상 시간, **실제 이동거리**, 접근성 점수(`180`분 기준)를 확인.
+5. `추천 교수 목록으로` → 다른 교수의 `길찾기`를 눌러 도착지가 바뀌는지 확인.
+
+**주의:** 추천 카드의 `직선거리`와 길찾기 화면의 `실제 이동거리`는 서로 다른 수치입니다. 거리 표시는 위치 허용 또는 출발지 입력이 있을 때만 제공하며, 값을 모를 때 임의로 채우지 않습니다.
+
+## GitHub → Render 자동 반영
+
+1. VS Code에서 `Ctrl + Shift + G` → 변경 파일 Stage → Commit → Sync Changes(Push).
+2. Render의 Auto-Deploy가 `On Commit`이고 연결 브랜치가 `main`이라면 자동 배포됩니다.
+3. 이번 기능 변경만으로 **Render Environment 값을 바꿀 필요는 없습니다.** 신규 키/기준시간을 바꿀 경우에만 Environment를 수정합니다.
+4. 배포 사이트 접속 후 강력 새로고침(`Ctrl + Shift + R`).
+
+## 백엔드 API / DB 연결
+
+| HTTP | 경로 | 기능 |
+|---|---|---|
+| GET | `/api/specialties` | 진료과/부위/세부 질환 UI 옵션 |
+| GET | `/api/recommendations?department=정형외과&condition=무릎` | 전문성순 가상 교수 목록 |
+| GET | `/api/hospitals` | 고정된 5개 병원 위도·경도 |
+| GET | `/api/search?q=수원역` | 카카오 장소 검색 |
+| POST | `/api/route` | **선택한 병원 한 곳의 경로** 조회 |
+| POST | `/api/evaluate` | 이전 5개 병원 비교 API (호환성 유지) |
+
+`POST /api/route` 요청 예시:
+
+```json
+{"hospital_id":"ajou","lat":37.25,"lng":127.05,"mode":"car"}
 ```
 
-(가상환경을 사용하지 않는 경우 `py app.py`)
+`hospital_id`만으로 목적지를 결정하므로 프런트에서 임의 병원 좌표를 보내지 않습니다. `app.py`의 `HOSPITALS`에 기존의 고정 좌표 5개를 사용합니다. 실제 병원 출입구로 확인·보정한 뒤 운영할 것을 권장합니다.
 
-터미널에 `Running on http://127.0.0.1:5000`가 뜨면 브라우저에 아래 주소를 입력합니다.
+실제 교수 DB 연동 시 `recommendations.py`의 `load_professors()`를 DB 질의로 교체하세요. 필요한 필드는 기존 파일 주석에 기록돼 있습니다. `specialties.py`의 세부 질환 입력은 현재 UI 시연용이며, 진료적합도 점수는 **부위/분야 단위**의 가상 값입니다. 질환 단위 정확도를 주장하려면 DB에 진료 분야별 상세 매핑을 구현해야 합니다.
 
-**http://localhost:5000**
+## 확인 및 제약
 
-처음 실행하면 카카오 API를 통해 병원 5개 주소를 좌표로 변환하여 표시합니다.
-
-## 5. 실제 사용 방법
-
-1. `내 현재 위치 사용`을 누르고 브라우저에서 위치 권한을 허용합니다. PC GPS가 부정확하거나 실패하면 `수원역`, `광교중앙역` 등을 검색하거나 지도를 클릭하세요.
-2. 자동차/대중교통/도보/자전거 중 하나를 선택합니다.
-3. `5개 병원 접근성 비교`를 누릅니다.
-4. 모든 병원에 대해 실제 길찾기 API를 호출하고, 예상 이동시간·거리·점수를 계산합니다.
-5. 결과 목록에서 병원을 누르면 지도에 경로가 표시됩니다. `카카오맵에서 길찾기 보기` 링크도 이용할 수 있습니다.
-
-> 위치 권한은 일반적으로 **HTTPS 또는 localhost**에서만 동작합니다. 휴대폰에서 LAN의 `http://192.168...` 주소로 접속하면 현재 위치 기능이 제한될 수 있습니다. 또한 이 샘플 서버는 127.0.0.1로 바인딩되어 있어 PC 자체에서만 열 수 있습니다.
-
-## 6. 접근성 점수 계산
-
-```text
-이동시간 t (분)
-접근성 점수 (0~1) = max(0, 1 − t / 120)
-화면 표시 점수 = 접근성 점수 × 100
-```
-
-예) 30분→75점, 60분→50점, 90분→25점, 120분 이상→0점. 120분은 **연구용 임시 가정**입니다. 팀의 실험 설계에 맞게 `.env`에서 변경할 수 있습니다. 모든 병원 및 선택한 교통수단에 **같은 기준시간**을 적용합니다.
-
-시간 출처:
-- 자동차: Kakao Mobility `routes[0].summary.duration` (초)
-- 대중교통: Kakao Maps `routes[].properties.totalTime` (초) 중 최소
-- 도보/자전거: Kakao Maps `route.properties.totalTime` (초)
-
-API 경로 데이터는 전체 경로의 일부가 생략되거나 반환되지 않을 수 있습니다. 그 경우 지도에 경로 선이 나타나지 않을 수 있으나, 소요시간 점수는 경로시간이 정상 반환된 경우 계산됩니다.
-
-## 7. 실행 오류가 날 때
-
-| 현상 | 해결 |
-| --- | --- |
-| 지도 대신 오류 메시지 표시 | JavaScript 키·JS SDK 도메인(`http://localhost:5000`)·카카오맵 활성화 여부 확인 |
-| `Kakao API HTTP 401` | REST API 키 오입력 또는 키 제한 설정 확인 |
-| `403` | 해당 API 사용 권한, 활성화, REST 키 허용 IP 정책 확인 |
-| `429` | 일일 무료 쿼터 소진 또는 호출 제한. 카카오 통계 확인 |
-| GPS 위치 오류 | 브라우저 위치 권한 허용, localhost 접속, 지도 클릭/장소 검색 사용 |
-| 도보/자전거 `TOO_FAR_AWAY` 등 | 장거리 경로 제한 또는 실제 연결 가능한 경로 없음. 해당 병원은 조회 불가로 표시 |
-| 대중교통 경로 없음 | 해당 출발지/목적지에서 경로가 제공되지 않거나 조건에 맞는 경로가 없음 |
-| 병원 주소 조회 실패 | REST 키/지도 API 활성화 확인. `app.py` 내 병원 주소가 정확한지 확인 |
-
-## 8. 파일 설명
-
-```text
-hospital-access-kakao/
-├── app.py                  # Flask API 서버, 카카오 REST 호출 및 점수 계산
-├── .env.example            # 키 입력 예시(실제 키 저장 금지)
-├── .gitignore              # 비밀 키/가상환경 업로드 제외
-├── requirements.txt        # Python 패키지
-├── templates/index.html    # 사용자 화면
-├── static/style.css        # 앱 스타일
-├── static/app.js           # 지도·교통수단·경로 선택 기능
-└── tests/test_app.py       # 점수 계산 및 응답 파싱 단위 테스트
-```
-
-## 9. 단위 테스트
-
-```powershell
-python -m unittest discover -s tests -v
-```
-
-실제 카카오 서비스/API를 대상으로 한 통합 테스트는 **카카오 키를 등록하고 호출해 봐야** 확인할 수 있습니다.
-
-## 확장 과제
-
-- 실제 병원 **출입구/주차장/대중교통 승하차 지점** 좌표로 목적지 개선
-- 대중교통 탑승 가능 시간, 배차 간격, 도보 구간, 환승 수 분석
-- 이동 약자 전용 옵션(휠체어 접근 가능 경로 등)은 검증된 별도 데이터 확보 후 구현
-- 시간대별 도착 예상시각 및 실시간 대중교통 정보 연동
-- 다른 팀원이 만든 최종 전문성·신속성 평가와 `score` 값을 결합
-- 경로/위치 정보 보관 필요 시 사용자 동의 및 최소 수집 설계
-
-## API 사용량
-
-사용자가 교통수단 1개로 5개 병원을 비교할 때 원칙적으로 **병원별 API 경로 조회 5건**이 발생합니다. 이 앱에는 2분 메모리 캐시가 있으므로 같은 위치에서 재조회하면 일부 호출은 생략될 수 있습니다. 카카오에서 안내하는 일별 무료 쿼터와 과금 정책을 확인하세요.
+- Python 및 JavaScript 구문 검사, 카탈로그·추천 순위 정렬, 목업 API를 사용한 3화면 브라우저 테스트를 실시했습니다.
+- 실제 API 키가 없으므로 **카카오 SDK 지도, 길찾기 REST API 실호출, Render 통합 배포**는 사용자 환경에서 추가 검증해야 합니다.
+- 위치 정보는 파일/DB에 저장하지 않고, 경로 조회 시에만 서버로 전송합니다. 프로덕션 운영 시 로그/보존 정책도 검토해 주세요.
+- 연구용 접근성 점수: `max(0, 1 - 이동시간(분)/180)`; 카드 UI에서 100배 점수로 표시.

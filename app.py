@@ -13,6 +13,9 @@ import requests
 from dotenv import load_dotenv
 from flask import Flask, jsonify, render_template, request
 
+from recommendations import DEPARTMENTS, CONDITIONS, ranked_recommendations
+from specialties import SPECIALTIES
+
 load_dotenv()
 app = Flask(__name__)
 
@@ -33,14 +36,19 @@ class Hospital:
     id: str
     name: str
     address: str
+    lat: float
+    lng: float
 
 
+# 고정 WGS84 좌표: 각 병원의 도로명주소 위치를 근거로 한 대표점.
+# 자동차 진입구/외래동 출입구가 아니므로, 실제 서비스 전에 카카오맵에서
+# 수단별(차량·도보 등) 진입 좌표를 직접 검증하고 필요시 조정할 것.
 HOSPITALS = [
-    Hospital("ajou", "아주대학교병원", "경기 수원시 영통구 월드컵로 164"),
-    Hospital("vincent", "가톨릭대학교 성빈센트병원", "경기 수원시 팔달구 중부대로 93"),
-    Hospital("yongin", "용인세브란스병원", "경기 용인시 기흥구 동백죽전대로 363"),
-    Hospital("snubh", "분당서울대학교병원", "경기 성남시 분당구 구미로173번길 82"),
-    Hospital("cha", "분당차병원", "경기 성남시 분당구 야탑로 59"),
+    Hospital("ajou", "아주대학교병원", "경기 수원시 영통구 월드컵로 164", 37.2794612, 127.0476837),
+    Hospital("vincent", "가톨릭대학교 성빈센트병원", "경기 수원시 팔달구 중부대로 93", 37.2768855, 127.0267533),
+    Hospital("yongin", "용인세브란스병원", "경기 용인시 기흥구 동백죽전대로 363", 37.2708050, 127.1485144),
+    Hospital("snubh", "분당서울대학교병원", "경기 성남시 분당구 구미로173번길 82", 37.3516694, 127.1234066),
+    Hospital("cha", "분당차병원", "경기 성남시 분당구 야탑로 59", 37.4102384, 127.1254535),
 ]
 HOSPITAL_LOOKUP = {h.id: h for h in HOSPITALS}
 MODES = {"car", "transit", "walk", "bike"}
@@ -79,15 +87,19 @@ def kakao_get(url: str, params: dict[str, Any]) -> dict[str, Any]:
         raise RuntimeError("Kakao API에서 JSON 응답을 받지 못했습니다.") from exc
 
 
-def geocode_hospital(hospital: Hospital) -> dict[str, Any]:
-    def lookup():
-        result = kakao_get(f"{LOCAL_BASE}/v2/local/search/address.json", {"query": hospital.address})
-        places = result.get("documents", [])
-        if not places:
-            raise RuntimeError(f"병원 주소의 좌표를 찾지 못했습니다: {hospital.address}")
-        hit = places[0]
-        return {**asdict(hospital), "lat": float(hit["y"]), "lng": float(hit["x"])}
-    return cached(("hospital", hospital.id), 24 * 3600, lookup)
+def hospital_location(hospital: Hospital) -> dict[str, Any]:
+    """추가 Geocoding 요청 없이 저장된 병원 위·경도를 반환."""
+    return asdict(hospital)
+
+
+def straight_line_km(start_lat: float, start_lng: float, dest_lat: float, dest_lng: float) -> float:
+    """길찾기 API 실패 시 정보 제공용 직선거리. 도로 이동거리가 아님."""
+    radius = 6371.0088
+    phi1, phi2 = math.radians(start_lat), math.radians(dest_lat)
+    dphi = phi2 - phi1
+    dlambda = math.radians(dest_lng - start_lng)
+    a = math.sin(dphi / 2) ** 2 + math.cos(phi1) * math.cos(phi2) * math.sin(dlambda / 2) ** 2
+    return round(radius * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a)), 2)
 
 
 def validate_coordinates(obj: dict[str, Any]) -> tuple[float, float]:
@@ -216,13 +228,31 @@ def index():
 
 @app.get("/api/hospitals")
 def hospitals():
-    data = []
-    for hospital in HOSPITALS:
-        try:
-            data.append(geocode_hospital(hospital))
-        except (ValueError, RuntimeError, requests.RequestException) as exc:
-            return jsonify({"error": str(exc)}), 502
-    return jsonify({"hospitals": data, "score_limit_minutes": LIMIT_MINUTES})
+    # API 키 없이도 사용 가능한 고정 병원 좌표: 주소→좌표 변환 호출이 없음.
+    return jsonify({"hospitals": [hospital_location(h) for h in HOSPITALS],
+                    "score_limit_minutes": LIMIT_MINUTES})
+
+
+@app.get("/api/specialties")
+def specialties():
+    """첫 화면의 진료과/부위/질환 옵션. 질환명은 현재 UI 입력 용도입니다."""
+    return jsonify({"departments": SPECIALTIES, "data_source": "demo"})
+
+
+@app.get("/api/recommendations")
+def recommendations():
+    """전문성 기준 가상 교수 순위. 이동거리·시간은 /api/evaluate 결과와 UI에서 결합."""
+    department = request.args.get("department", "정형외과")
+    condition = request.args.get("condition", "무릎")
+    if department not in DEPARTMENTS:
+        return jsonify({"error": "지원하지 않는 진료과입니다."}), 400
+    if condition not in CONDITIONS[department]:
+        return jsonify({"error": "선택한 진료과의 세부 분야를 확인하세요."}), 400
+    items = ranked_recommendations(department, condition)
+    return jsonify({"department": department, "condition": condition,
+                    "data_source": "demo", "is_demo": True,
+                    "weight_fitness": 0.8, "weight_career": 0.2,
+                    "results": items, "total": len(items)})
 
 
 @app.get("/api/search")
@@ -244,10 +274,11 @@ def search_location():
 
 def evaluate_one(hospital: Hospital, mode: str, lat: float, lng: float) -> dict[str, Any]:
     info = {**asdict(hospital)}
+    info["direct_distance_km"] = straight_line_km(lat, lng, hospital.lat, hospital.lng)
     try:
-        coords = geocode_hospital(hospital)
-        info.update({"lat": coords["lat"], "lng": coords["lng"]})
-        result = get_route(mode, lat, lng, coords["lat"], coords["lng"])
+        # 주소 Geocoding API 호출 없음: 고정 좌표 사용
+        info.update({"lat": hospital.lat, "lng": hospital.lng})
+        result = get_route(mode, lat, lng, hospital.lat, hospital.lng)
         info.update(result)
         info["status"] = "ok"
     except (ValueError, RuntimeError, requests.RequestException, KeyError) as exc:
@@ -256,6 +287,31 @@ def evaluate_one(hospital: Hospital, mode: str, lat: float, lng: float) -> dict[
         info["score"] = None  # 조회 실패를 0점으로 처리하지 않음
         info["score_100"] = None
     return info
+
+
+@app.post("/api/route")
+def route_to_selected_hospital():
+    """단일 교수 카드의 병원까지 경로 조회. 임의의 목적지 좌표는 받지 않습니다."""
+    body = request.get_json(silent=True) or {}
+    if not isinstance(body, dict):
+        return jsonify({"error": "JSON 객체 형식으로 요청해 주세요."}), 400
+    try:
+        lat, lng = validate_coordinates(body)
+        mode = body.get("mode")
+        if not isinstance(mode, str) or mode not in MODES:
+            return jsonify({"error": "mode는 car, transit, walk, bike 중 하나여야 합니다."}), 400
+        hospital_id = body.get("hospital_id")
+        hospital = HOSPITAL_LOOKUP.get(hospital_id) if isinstance(hospital_id, str) else None
+        if hospital is None:
+            return jsonify({"error": "지원하지 않는 병원입니다."}), 400
+        if not KAKAO_REST_KEY:
+            return jsonify({"error": "서버에 KAKAO_REST_API_KEY를 설정하세요."}), 503
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+
+    result = evaluate_one(hospital, mode, lat, lng)
+    return jsonify({"mode": mode, "origin": {"lat": lat, "lng": lng},
+                    "hospital": result, "score_limit_minutes": LIMIT_MINUTES})
 
 
 @app.post("/api/evaluate")

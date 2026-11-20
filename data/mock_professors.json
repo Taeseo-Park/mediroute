@@ -1,0 +1,226 @@
+[
+  {
+    "id": "demo-ortho-a",
+    "hospital_id": "ajou",
+    "name": "가상 교수 A",
+    "department": "정형외과",
+    "specialty": "무릎·고관절",
+    "career_years": 25,
+    "position": "교수",
+    "fit_by_condition": {
+      "무릎": 0.98,
+      "어깨": 0.62,
+      "척추": 0.47
+    }
+  },
+  {
+    "id": "demo-ortho-b",
+    "hospital_id": "vincent",
+    "name": "가상 교수 B",
+    "department": "정형외과",
+    "specialty": "어깨·팔꿈치",
+    "career_years": null,
+    "position": "부교수",
+    "fit_by_condition": {
+      "무릎": 0.7,
+      "어깨": 0.96,
+      "척추": 0.45
+    }
+  },
+  {
+    "id": "demo-ortho-c",
+    "hospital_id": "snubh",
+    "name": "가상 교수 C",
+    "department": "정형외과",
+    "specialty": "척추·디스크",
+    "career_years": 19,
+    "position": "교수",
+    "fit_by_condition": {
+      "무릎": 0.6,
+      "어깨": 0.64,
+      "척추": 0.98
+    }
+  },
+  {
+    "id": "demo-ortho-d",
+    "hospital_id": "yongin",
+    "name": "가상 교수 D",
+    "department": "정형외과",
+    "specialty": "무릎·스포츠의학",
+    "career_years": 15,
+    "position": "조교수",
+    "fit_by_condition": {
+      "무릎": 0.92,
+      "어깨": 0.62,
+      "척추": 0.42
+    }
+  },
+  {
+    "id": "demo-ortho-e",
+    "hospital_id": "cha",
+    "name": "가상 교수 E",
+    "department": "정형외과",
+    "specialty": "척추·재활",
+    "career_years": null,
+    "position": null,
+    "fit_by_condition": {
+      "무릎": 0.55,
+      "어깨": 0.52,
+      "척추": 0.92
+    }
+  },
+  {
+    "id": "demo-ortho-f",
+    "hospital_id": "ajou",
+    "name": "가상 교수 F",
+    "department": "정형외과",
+    "specialty": "관절·외상",
+    "career_years": 12,
+    "position": "부교수",
+    "fit_by_condition": {
+      "무릎": 0.85,
+      "어깨": 0.75,
+      "척추": 0.43
+    }
+  },
+  {
+    "id": "demo-neuro-a",
+    "hospital_id": "yongin",
+    "name": "가상 교수 G",
+    "department": "신경과",
+    "specialty": "두통·뇌혈관",
+    "career_years": 21,
+    "position": "교수",
+    "fit_by_condition": {
+      "두통": 0.96,
+      "어지럼증": 0.49,
+      "뇌졸중": 0.82
+    }
+  },
+  {
+    "id": "demo-neuro-b",
+    "hospital_id": "snubh",
+    "name": "가상 교수 H",
+    "department": "신경과",
+    "specialty": "어지럼증·평형",
+    "career_years": null,
+    "position": "교수",
+    "fit_by_condition": {
+      "두통": 0.51,
+      "어지럼증": 0.98,
+      "뇌졸중": 0.51
+    }
+  },
+  {
+    "id": "demo-neuro-c",
+    "hospital_id": "vincent",
+    "name": "가상 교수 I",
+    "department": "신경과",
+    "specialty": "뇌졸중·혈관",
+    "career_years": 16,
+    "position": "부교수",
+    "fit_by_condition": {
+      "두통": 0.53,
+      "어지럼증": 0.43,
+      "뇌졸중": 0.97
+    }
+  },
+  {
+    "id": "demo-neuro-d",
+    "hospital_id": "ajou",
+    "name": "가상 교수 J",
+    "department": "신경과",
+    "specialty": "두통·통증",
+    "career_years": 11,
+    "position": "조교수",
+    "fit_by_condition": {
+      "두통": 0.92,
+      "어지럼증": 0.63,
+      "뇌졸중": 0.62
+    }
+  },
+  {
+    "id": "demo-neuro-e",
+    "hospital_id": "cha",
+    "name": "가상 교수 K",
+    "department": "신경과",
+    "specialty": "신경근육·어지럼",
+    "career_years": null,
+    "position": null,
+    "fit_by_condition": {
+      "두통": 0.48,
+      "어지럼증": 0.87,
+      "뇌졸중": 0.45
+    }
+  },
+  {
+    "id": "demo-gi-a",
+    "hospital_id": "ajou",
+    "name": "가상 교수 L",
+    "department": "소화기내과",
+    "specialty": "위·식도",
+    "career_years": 25,
+    "position": "교수",
+    "fit_by_condition": {
+      "위장": 0.96,
+      "간": 0.46,
+      "대장": 0.36
+    }
+  },
+  {
+    "id": "demo-gi-b",
+    "hospital_id": "snubh",
+    "name": "가상 교수 M",
+    "department": "소화기내과",
+    "specialty": "간질환",
+    "career_years": 20,
+    "position": "부교수",
+    "fit_by_condition": {
+      "위장": 0.49,
+      "간": 0.97,
+      "대장": 0.48
+    }
+  },
+  {
+    "id": "demo-gi-c",
+    "hospital_id": "cha",
+    "name": "가상 교수 N",
+    "department": "소화기내과",
+    "specialty": "대장·내시경",
+    "career_years": 12,
+    "position": "조교수",
+    "fit_by_condition": {
+      "위장": 0.54,
+      "간": 0.44,
+      "대장": 0.98
+    }
+  },
+  {
+    "id": "demo-gi-d",
+    "hospital_id": "vincent",
+    "name": "가상 교수 O",
+    "department": "소화기내과",
+    "specialty": "위·대장",
+    "career_years": null,
+    "position": "교수",
+    "fit_by_condition": {
+      "위장": 0.89,
+      "간": 0.42,
+      "대장": 0.85
+    }
+  },
+  {
+    "id": "demo-gi-e",
+    "hospital_id": "yongin",
+    "name": "가상 교수 P",
+    "department": "소화기내과",
+    "specialty": "간·담도",
+    "career_years": 16,
+    "position": "부교수",
+    "fit_by_condition": {
+      "위장": 0.42,
+      "간": 0.91,
+      "대장": 0.44
+    }
+  }
+]
